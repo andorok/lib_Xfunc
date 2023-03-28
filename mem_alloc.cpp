@@ -74,7 +74,7 @@ int free_hugepage(hupa_t page)
 }
 #else
 
-// считать из файла информацию о данных
+// СЃС‡РёС‚Р°С‚СЊ РёР· С„Р°Р№Р»Р° РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РґР°РЅРЅС‹С…
 void* read_metainfo_from_file(const char *fname, size_t info_size)
 {
 	FILE *fp = fopen(fname, "rb");
@@ -88,7 +88,7 @@ void* read_metainfo_from_file(const char *fname, size_t info_size)
 	fseek(fp, -(static_cast<long>(info_size)), SEEK_END);
 
 	printf("Allocating memory...              \r");
-	// Выделяем память
+	// Р’С‹РґРµР»СЏРµРј РїР°РјСЏС‚СЊ
 	void *virt = virtAlloc(info_size);
 	if (!virt)
 	{
@@ -114,9 +114,21 @@ void* read_metainfo_from_file(const char *fname, size_t info_size)
 
 #endif
 
-const uint16_t g_sample_size = sizeof(uint16_t); // размер отсчета в байтах
-const int g_num_chan = 16; // число каналов ЦАП
+const uint16_t g_sample_size = sizeof(uint16_t); // СЂР°Р·РјРµСЂ РѕС‚СЃС‡РµС‚Р° РІ Р±Р°Р№С‚Р°С…
+const int g_num_chan = 16; // С‡РёСЃР»Рѕ РєР°РЅР°Р»РѕРІ Р¦РђРџ
 static vector<hupa_t> g_pages;
+
+struct frame_t {
+	size_t n;
+	void *physaddr;
+	void *virtaddr;
+	//float *a[CH];
+	//float *b[CH];
+	root_info_t *root_info;
+	block_info_t *block_info;
+};
+static vector<frame_t> g_frames;
+
 
 // host2card (DAC) buffers
 void* alloc_h2c_buffers(CXdmaDevice *pDev, const char* fname, int page_num, uint16_t chan)
@@ -290,11 +302,11 @@ void free_buffers(void *buf)
 #endif
 }
 
-#define DATA_EMPTY      0   // данных нет
-#define DATA_BUSY       1   // фрейм в процессе заполнения
-#define DATA_PRESENT    2   // фрейм с данными
-#define DATA_ERROR      3   // была ошибка при приеме фрейма
-#define DATA_DONTUSE    4   // метка для не используемых фреймов, обычно на последней странице
+#define DATA_EMPTY      0   // РґР°РЅРЅС‹С… РЅРµС‚
+#define DATA_BUSY       1   // С„СЂРµР№Рј РІ РїСЂРѕС†РµСЃСЃРµ Р·Р°РїРѕР»РЅРµРЅРёСЏ
+#define DATA_PRESENT    2   // С„СЂРµР№Рј СЃ РґР°РЅРЅС‹РјРё
+#define DATA_ERROR      3   // Р±С‹Р»Р° РѕС€РёР±РєР° РїСЂРё РїСЂРёРµРјРµ С„СЂРµР№РјР°
+#define DATA_DONTUSE    4   // РјРµС‚РєР° РґР»СЏ РЅРµ РёСЃРїРѕР»СЊР·СѓРµРјС‹С… С„СЂРµР№РјРѕРІ, РѕР±С‹С‡РЅРѕ РЅР° РїРѕСЃР»РµРґРЅРµР№ СЃС‚СЂР°РЅРёС†Рµ
 
 #ifdef __linux__
 
@@ -328,18 +340,18 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 		root_info_t *ri = (root_info_t *)((char *)page.virt + root_info_offset);
 		memset(ri, 0, sizeof(struct root_info_t));
 		ri->marker = ROOT_MARKER;
-		ri->bacos_total = ndev;				// всего устройств
-		ri->bacos_curr = pDev->get_instance(); // номер устройства
-		ri->hp_total = hupa_num;			// всего hugepage`й
-		ri->hp_curr = ipage;				// номер hugepage
-		ri->ach_total = chans * ndev;		// всего каналов
+		ri->bacos_total = ndev;				// РІСЃРµРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІ
+		ri->bacos_curr = pDev->get_instance(); // РЅРѕРјРµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІР°
+		ri->hp_total = hupa_num;			// РІСЃРµРіРѕ hugepage`Р№
+		ri->hp_curr = ipage;				// РЅРѕРјРµСЂ hugepage
+		ri->ach_total = chans * ndev;		// РІСЃРµРіРѕ РєР°РЅР°Р»РѕРІ
 		ri->ach_start = 0;
-		ri->ach_count = chans;				// каналов на одном устройстве
-		ri->block_count = blk_in_page;		// количество блоков на hugepage
-		ri->n_smpl = samples;				// количество отсчетов на канал в блоке (фрейме)
-		ri->data_type = DATA_TYPE_SIG_TIME; // тип данных - времянной сигнал
+		ri->ach_count = chans;				// РєР°РЅР°Р»РѕРІ РЅР° РѕРґРЅРѕРј СѓСЃС‚СЂРѕР№СЃС‚РІРµ
+		ri->block_count = blk_in_page;		// РєРѕР»РёС‡РµСЃС‚РІРѕ Р±Р»РѕРєРѕРІ РЅР° hugepage
+		ri->n_smpl = samples;				// РєРѕР»РёС‡РµСЃС‚РІРѕ РѕС‚СЃС‡РµС‚РѕРІ РЅР° РєР°РЅР°Р» РІ Р±Р»РѕРєРµ (С„СЂРµР№РјРµ)
+		ri->data_type = DATA_TYPE_SIG_TIME; // С‚РёРї РґР°РЅРЅС‹С… - РІСЂРµРјСЏРЅРЅРѕР№ СЃРёРіРЅР°Р»
 		ri->n_lines_per_block = 1;
-		ri->mips = -1;						// количество масштабов для DATA_TYPE_PANO_ReImDAQPw
+		ri->mips = -1;						// РєРѕР»РёС‡РµСЃС‚РІРѕ РјР°СЃС€С‚Р°Р±РѕРІ РґР»СЏ DATA_TYPE_PANO_ReImDAQPw
 
 		uint32_t blk_offset, bi_offset;
 		for (int iblk = 0; iblk < blk_in_page; iblk++)
@@ -360,11 +372,19 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 			blk_info->l_freq_Hz = 0;
 			blk_info->bin_Hz = 0;
 			blk_info->n_smpl = samples;
-			blk_info->ach_total = ri->ach_total; // всего каналов
+			blk_info->ach_total = ri->ach_total; // РІСЃРµРіРѕ РєР°РЅР°Р»РѕРІ
 			blk_info->status = DATA_EMPTY;
 			blk_info->hw_nframe = -1;
 			blk_info->block_idx = idx_blk;
 			blk_info->block_idx_dst = -1;
+
+			frame_t frame;
+			frame.n = idx_blk;
+			frame.physaddr = (char*)page.phys + blk_offset;
+			frame.virtaddr = (char*)page.virt + blk_offset;
+			frame.root_info = ri;
+			frame.block_info = blk_info;
+			g_frames.push_back(frame);
 		}
 	}
 
@@ -402,6 +422,7 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 
 #else
 
+
 // card2host (ADC) buffers
 void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chans, int samples, int page_num,
 	uint32_t blk_size, uint32_t blk_num, uint16_t dma_chan)
@@ -416,7 +437,7 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 	int blk_in_page = SIZE_1G / blk_size - 1;
 
 	//void** root_info_ptr = new void*[g_pages];
-	struct root_info_t** root_info = new struct root_info_t*[hupa_num];
+	root_info_t** root_info = new struct root_info_t*[hupa_num];
 
 	for (int ipage = 0; ipage < hupa_num; ipage++)
 	{
@@ -428,16 +449,16 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 		root_info[ipage]->marker = ROOT_MARKER;
 		root_info[ipage]->bacos_total = ndev;
 		root_info[ipage]->bacos_curr = pDev->get_instance();
-		root_info[ipage]->hp_total = hupa_num;			// всего hugepage`й
-		root_info[ipage]->hp_curr = ipage;				// номер hugepage
-		root_info[ipage]->ach_total = chans * ndev; // всего каналов
+		root_info[ipage]->hp_total = hupa_num;			// РІСЃРµРіРѕ hugepage`Р№
+		root_info[ipage]->hp_curr = ipage;				// РЅРѕРјРµСЂ hugepage
+		root_info[ipage]->ach_total = chans * ndev; // РІСЃРµРіРѕ РєР°РЅР°Р»РѕРІ
 		root_info[ipage]->ach_start = 0;
 		root_info[ipage]->ach_count = chans;
-		root_info[ipage]->block_count = blk_in_page;	// количество блоков на hugepage
-		root_info[ipage]->n_smpl = samples;			// количество отсчетов в блоке (фрейме)
+		root_info[ipage]->block_count = blk_in_page;	// РєРѕР»РёС‡РµСЃС‚РІРѕ Р±Р»РѕРєРѕРІ РЅР° hugepage
+		root_info[ipage]->n_smpl = samples;			// РєРѕР»РёС‡РµСЃС‚РІРѕ РѕС‚СЃС‡РµС‚РѕРІ РІ Р±Р»РѕРєРµ (С„СЂРµР№РјРµ)
 		root_info[ipage]->data_type = DATA_TYPE_SIG_TIME;
 		root_info[ipage]->n_lines_per_block = 1;
-		root_info[ipage]->mips = -1;            // количество масштабов для DATA_TYPE_PANO_ReImDAQPw
+		root_info[ipage]->mips = -1;            // РєРѕР»РёС‡РµСЃС‚РІРѕ РјР°СЃС€С‚Р°Р±РѕРІ РґР»СЏ DATA_TYPE_PANO_ReImDAQPw
 	}
 
 	unsigned int mem_type = KERNEL_MEMORY_TYPE;
@@ -462,12 +483,20 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 			blk_info[idx_blk]->l_freq_Hz = 0;
 			blk_info[idx_blk]->bin_Hz = 0;
 			blk_info[idx_blk]->n_smpl = samples;
-			blk_info[idx_blk]->ach_total = root_info[ipage]->ach_total; // всего каналов
+			blk_info[idx_blk]->ach_total = root_info[ipage]->ach_total; // РІСЃРµРіРѕ РєР°РЅР°Р»РѕРІ
 			blk_info[idx_blk]->status = DATA_EMPTY;
 			blk_info[idx_blk]->hw_nframe = -1;
 			blk_info[idx_blk]->block_idx = idx_blk;
 			blk_info[idx_blk]->block_idx_dst = -1;
 			//info_buf[ipage * blk_in_page + iblk] = bi;
+
+			frame_t frame;
+			frame.n = idx_blk;
+			//frame.physaddr = (char*)page.phys + blk_offset;
+			//frame.virtaddr = (char*)page.virt + blk_offset;
+			frame.root_info = root_info[ipage];
+			frame.block_info = blk_info[idx_blk];
+			g_frames.push_back(frame);
 		}
 	}
 	status = pDev->alloc_dma_buf(&buffers, blk_size, &blk_num, mem_type, dir, dma_chan);
@@ -488,3 +517,36 @@ void* alloc_c2h_buffers(CXdmaDevice *pDev, const char* fname, int ndev, int chan
 	}
 }
 #endif
+
+void set_block_info(int idx, uint32_t iframe, int32_t sec, int32_t nsec)
+{
+	g_frames[idx].block_info->nframe = iframe;
+	g_frames[idx].block_info->sec = sec;
+	g_frames[idx].block_info->nsec = nsec;
+
+	//printf(" block_info[%d] : nframe = %d, sec = %d, nsec = %d\n",
+	//	idx, 
+	//	g_frames[idx].block_info->nframe, 
+	//	g_frames[idx].block_info->sec, 
+	//	g_frames[idx].block_info->nsec);
+}
+
+void* get_block_info(int idx)
+{
+	return g_frames[idx].block_info;
+
+}
+
+#include <time.h>
+
+void print_block_info(int idx)
+{
+	time_t utc_time_t = static_cast<time_t>(g_frames[idx].block_info->sec);
+	char* str_time = ctime(&utc_time_t);
+	str_time[strlen(str_time) - 1] = 0;
+	printf(" block_info[%d] : nframe = %d, %s (sec = %d, nsec = %d)\n",
+					idx, 
+					g_frames[idx].block_info->nframe, str_time,
+					g_frames[idx].block_info->sec,
+					g_frames[idx].block_info->nsec);
+}
