@@ -34,7 +34,13 @@ int32_t GetAffinityCPU()
 	return -1;
 }
 
+int GetNumbresOfCPU()
+{
+	return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
 #else
+
 void SetAffinityCPU(uint32_t cpu_num)
 {
 	HANDLE hCurThread = GetCurrentThread();
@@ -48,6 +54,14 @@ void SetSoftAffinityCPU(uint32_t cpu_num)
 	HANDLE hCurThread = GetCurrentThread();
 	SetThreadIdealProcessor(hCurThread, cpu_num);
 }
+
+int GetNumbresOfCPU()
+{
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	return sysinfo.dwNumberOfProcessors;
+}
+
 #endif
 
 #endif	// _CPU_FUNC_H_
