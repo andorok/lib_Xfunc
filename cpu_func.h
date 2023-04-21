@@ -4,6 +4,7 @@
 
 #ifdef __linux__
 #include <pthread.h>
+#include <numa.h>
 #else
 #include <stdint.h>
 #endif // __linux__
@@ -34,9 +35,25 @@ int32_t GetAffinityCPU()
 	return -1;
 }
 
-int GetNumbresOfCPU()
+int GetNumbersOfCPU()
 {
 	return sysconf(_SC_NPROCESSORS_ONLN);
+}
+
+// mask_num нужен, если процессоров больше 64
+uint64_t GetNumaNodeCPU(int node, int mask_num = 0)
+{
+	uint64_t mask;
+	struct bitmask * cpu_mask = numa_allocate_cpumask();
+	numa_node_to_cpus(node, cpu_mask);
+	//printf("  The mask of available CPU for NUMA node%d : %016lX\n", dev_info.node, *cpu_mask->maskp);
+	//return *cpu_mask->maskp;
+	if (mask_num < int(cpu_mask->size / 64))
+		mask = cpu_mask->maskp[mask_num];
+	else
+		mask = 0;
+	numa_free_cpumask(cpu_mask);
+	return mask;
 }
 
 #else
@@ -55,11 +72,19 @@ void SetSoftAffinityCPU(uint32_t cpu_num)
 	SetThreadIdealProcessor(hCurThread, cpu_num);
 }
 
-int GetNumbresOfCPU()
+int GetNumbersOfCPU()
 {
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
 	return sysinfo.dwNumberOfProcessors;
+}
+
+// mask_num нужен, если процессоров больше 64 (тогда под windows создаются какие-то группы)
+uint64_t GetNumaNodeCPU(int node, int mask_num = 0)
+{
+	uint64_t cpu_mask;
+	BOOL ret = GetNumaNodeProcessorMask(node, &cpu_mask);
+	return cpu_mask;
 }
 
 #endif
