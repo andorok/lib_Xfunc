@@ -2,6 +2,8 @@
 
 #include	"hp_structs.h"
 
+#pragma pack(push,1)
+
 struct frame_t {
 	size_t n;
 	void *physaddr;
@@ -32,6 +34,16 @@ struct adc_card_t
 	uint32_t nsec;
 
 };
+
+#pragma pack(pop)
+
+#define SIZE_4K 4 * 1024
+#define SIZE_1M 1024 * 1024
+#define SIZE_4M 4 * 1024 * 1024
+#define SIZE_8M 8 * 1024 * 1024
+#define SIZE_128M 128 * 1024 * 1024
+#define SIZE_256M 256 * 1024 * 1024
+#define SIZE_1G 1024*1024*1024
 
 #define DATA_EMPTY      0   // данных нет
 #define DATA_BUSY       1   // фрейм в процессе заполнения

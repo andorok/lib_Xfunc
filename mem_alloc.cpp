@@ -13,13 +13,15 @@
 #include	"cfile.h"
 #include	"hp_structs.h"
 
-#define SIZE_4K 4 * 1024
-#define SIZE_1M 1024 * 1024
-#define SIZE_4M 4 * 1024 * 1024
-#define SIZE_8M 8 * 1024 * 1024
-#define SIZE_128M 128 * 1024 * 1024
-#define SIZE_256M 256 * 1024 * 1024
-#define SIZE_1G 1024*1024*1024
+#include	"mem_alloc.h"
+
+double adc_card_t::adc_rate = 34406400.;
+int adc_card_t::chans = 16;
+int adc_card_t::samples = 131072;
+int adc_card_t::pages = 1;
+unsigned int adc_card_t::block_num = 4;
+unsigned int adc_card_t::block_size = SIZE_4M;
+int adc_card_t::blk_in_page = 8;
 
 #ifdef __linux__
 
