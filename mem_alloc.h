@@ -1,6 +1,8 @@
 #pragma once
 
 #include	"hp_structs.h"
+//#include	"axi_block.h"
+#include	"unit_dev.h"
 
 #pragma pack(push,1)
 
@@ -25,7 +27,9 @@ struct adc_card_t
 	static int blk_in_page;
 	uint16_t dma_chan;
 	char fpath[MAX_PATH];
-	CXdmaDevice* pAdc;
+	//CXdmaDevice* pAdc;
+	//CAxiBlock* pAxiblk;
+	CUnitDevice* pAdc;
 	int bus;
 	int dev;
 	void* datas;
