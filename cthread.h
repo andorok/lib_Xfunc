@@ -6,6 +6,10 @@
 #ifdef __linux__
 #include <pthread.h>
 #define INFINITE -1
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 #else
 #include "windows.h"
 #endif
@@ -120,5 +124,28 @@ void CMutex::sync()
 	ReleaseMutex(m_hMutex);
 #endif
 }
+
+class CSharedMem
+{
+
+#ifdef __linux__
+	int m_fd;
+#else
+	HANDLE m_hMem;
+#endif
+	size_t m_size;
+	void* m_ptr;
+
+protected:
+
+public:
+
+	void* create(const char* name, size_t size);
+	int close();
+
+	CSharedMem();
+	~CSharedMem();
+
+};
 
 #endif	// _THREAD_H_

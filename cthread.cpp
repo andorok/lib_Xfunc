@@ -140,3 +140,71 @@ int CThread::close()
 
 #endif // __linux__
 
+CSharedMem::CSharedMem()
+{
+	m_ptr = nullptr;
+#ifdef __linux__
+	m_fd = 0;
+#else
+    m_hMem = NULL;
+#endif
+}
+
+CSharedMem::~CSharedMem()
+{
+	close();
+}
+
+//-----------------------------------------------------------------------------
+void* CSharedMem::create(const char* name, size_t size)
+{
+	m_size = size;
+#ifdef __linux__
+	m_fd = shm_open(name, O_CREAT | O_RDWR, 0777);
+	if(m_fd == -1)
+		return nullptr;
+	ftruncate(m_fd, size);
+	m_ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, m_fd, 0);
+	if (m_ptr == MAP_FAILED)
+		return nullptr;
+#else
+	m_hMem = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, (DWORD)size, name);
+	if (m_hMem == NULL)
+		return nullptr;
+	//*alreadyCreated = (GetLastError() == ERROR_ALREADY_EXISTS) ? 1 : 0;
+	m_ptr = MapViewOfFile(m_hMem, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+	if (m_ptr == NULL)
+		return nullptr;
+#endif
+	return m_ptr;
+}
+
+//-----------------------------------------------------------------------------
+int CSharedMem::close()
+{
+#ifdef __linux__
+	if (m_ptr != nullptr) {
+		munmap(m_ptr, m_size);
+		m_ptr = nullptr;
+	}
+	if (m_fd != 0) {
+		::close(m_fd);
+		m_fd = 0;
+	}
+#else
+	int ret = 0;
+	if (m_ptr != nullptr) {
+		ret = UnmapViewOfFile(m_ptr);
+		if (!ret)
+			return -1;
+		m_ptr = nullptr;
+	}
+	if (m_hMem != NULL) {
+		ret = CloseHandle(m_hMem);
+		if (!ret)
+			return -1;
+        m_hMem = NULL;
+	}
+#endif
+	return 0;
+}
