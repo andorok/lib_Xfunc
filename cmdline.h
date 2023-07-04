@@ -9,9 +9,9 @@
 // argument types
 enum
 {
-	ARG_TYPE_NOT_NUM = 0,		// аргумент используется без числа
-	ARG_TYPE_CHR_NUM = 1,		// аргумент - буква с числом
-	ARG_TYPE_STR_NUM = 2		// аргумент - строка с числом
+	ARG_TYPE_NOT_NUM = 0,		// Р°СЂРіСѓРјРµРЅС‚ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ Р±РµР· С‡РёСЃР»Р°
+	ARG_TYPE_CHR_NUM = 1,		// Р°СЂРіСѓРјРµРЅС‚ - Р±СѓРєРІР° СЃ С‡РёСЃР»РѕРј
+	ARG_TYPE_STR_NUM = 2		// Р°СЂРіСѓРјРµРЅС‚ - СЃС‚СЂРѕРєР° СЃ С‡РёСЃР»РѕРј
 };
 
 int get_cmdl_arg(int &ii, char *argv[], const char *name, int type, int def_val)
@@ -22,7 +22,7 @@ int get_cmdl_arg(int &ii, char *argv[], const char *name, int type, int def_val)
 	switch (type)
 	{
 	case 0:
-	{	// без числа
+	{	// Р±РµР· С‡РёСЃР»Р°
 		if (!strcmp(argv[ii], name))
 		{
 			val = 1;
@@ -31,12 +31,12 @@ int get_cmdl_arg(int &ii, char *argv[], const char *name, int type, int def_val)
 		break;
 	}
 	case 1:
-	{	// буква с числом
+	{	// Р±СѓРєРІР° СЃ С‡РёСЃР»РѕРј
 		if (tolower(argv[ii][1]) == name[1])
 		{
 			pLin = &argv[ii][2];
 			if (argv[ii][2] == '\0')
-			{ // число задано через пробел
+			{ // С‡РёСЃР»Рѕ Р·Р°РґР°РЅРѕ С‡РµСЂРµР· РїСЂРѕР±РµР»
 				ii++;
 				pLin = argv[ii];
 			}
@@ -72,7 +72,7 @@ double get_cmdl_arg(int &ii, char *argv[], const char *name, int type, double de
 	switch (type)
 	{
 	case 0:
-	{	// без числа
+	{	// Р±РµР· С‡РёСЃР»Р°
 		if (!strcmp(argv[ii], name))
 		{
 			val = 1;
@@ -81,12 +81,12 @@ double get_cmdl_arg(int &ii, char *argv[], const char *name, int type, double de
 		break;
 	}
 	case 1:
-	{	// буква с числом
+	{	// Р±СѓРєРІР° СЃ С‡РёСЃР»РѕРј
 		if (tolower(argv[ii][1]) == name[1])
 		{
 			pLin = &argv[ii][2];
 			if (argv[ii][2] == '\0')
-			{ // число задано через пробел
+			{ // С‡РёСЃР»Рѕ Р·Р°РґР°РЅРѕ С‡РµСЂРµР· РїСЂРѕР±РµР»
 				ii++;
 				pLin = argv[ii];
 			}

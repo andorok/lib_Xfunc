@@ -10,7 +10,7 @@
 #endif // __linux__
 
 #ifdef __linux__
-//! Привязка потока к указанным процессорам (CPU)
+//! РџСЂРёРІСЏР·РєР° РїРѕС‚РѕРєР° Рє СѓРєР°Р·Р°РЅРЅС‹Рј РїСЂРѕС†РµСЃСЃРѕСЂР°Рј (CPU)
 void SetAffinityCPU(uint32_t cpu_num)
 {
 	// Set affinity mask to include CPU
@@ -40,7 +40,7 @@ int GetNumbersOfCPU()
 	return sysconf(_SC_NPROCESSORS_ONLN);
 }
 
-// mask_num нужен, если процессоров больше 64
+// mask_num РЅСѓР¶РµРЅ, РµСЃР»Рё РїСЂРѕС†РµСЃСЃРѕСЂРѕРІ Р±РѕР»СЊС€Рµ 64
 uint64_t GetNumaNodeCPU(int node, int mask_num = 0)
 {
 	uint64_t mask;
@@ -61,7 +61,7 @@ uint64_t GetNumaNodeCPU(int node, int mask_num = 0)
 void SetAffinityCPU(uint32_t cpu_num)
 {
 	HANDLE hCurThread = GetCurrentThread();
-	//uint32_t cpu_mask = 0x200; // 8-й
+	//uint32_t cpu_mask = 0x200; // 8-Р№
 	uint32_t cpu_mask = 1 << cpu_num;
 	SetThreadAffinityMask(hCurThread, cpu_mask);
 }
@@ -79,7 +79,7 @@ int GetNumbersOfCPU()
 	return sysinfo.dwNumberOfProcessors;
 }
 
-// mask_num нужен, если процессоров больше 64 (тогда под windows создаются какие-то группы)
+// mask_num РЅСѓР¶РµРЅ, РµСЃР»Рё РїСЂРѕС†РµСЃСЃРѕСЂРѕРІ Р±РѕР»СЊС€Рµ 64 (С‚РѕРіРґР° РїРѕРґ windows СЃРѕР·РґР°СЋС‚СЃСЏ РєР°РєРёРµ-С‚Рѕ РіСЂСѓРїРїС‹)
 uint64_t GetNumaNodeCPU(int node, int mask_num = 0)
 {
 	uint64_t cpu_mask;
