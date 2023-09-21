@@ -13,6 +13,7 @@
 #else
 #include "windows.h"
 #endif
+#include	<vector>
 
 class CThread
 {
@@ -38,6 +39,73 @@ public:
 
 	CThread();
 	~CThread();
+
+};
+
+//int const MAX_NSYNC = 64;
+
+class CBarrier
+{
+
+#ifdef __linux__
+	pthread_barrier_t m_barrier;
+#else
+	int m_nsync;
+	int m_cnt;
+	//HANDLE m_hSyncEvent[MAX_NSYNC];
+	std::vector <HANDLE> m_hSyncEvents;
+	HANDLE* m_pEvents;
+#endif
+
+protected:
+
+public:
+
+	int init(int count)
+	{
+		int ret = 0;
+#ifdef __linux__
+		pthread_barrier_init(&m_barrier, NULL, count);
+#else
+		m_nsync = 0;
+		m_cnt = count;
+		for (int i = 0; i < count; i++)
+		{
+			HANDLE hSyncEvent = CreateEvent(
+									NULL,   // default security attributes
+									FALSE,  // auto-reset event object
+									FALSE,  // initial state is nonsignaled
+									NULL);  // unnamed object
+			m_hSyncEvents.push_back(hSyncEvent);
+		}
+		m_pEvents = &m_hSyncEvents[0];
+#endif
+		return ret;
+	}
+	void wait()
+	{
+#ifdef __linux__
+		pthread_barrier_wait(&m_barrier);
+#else
+		SetEvent(m_hSyncEvents[m_nsync++]); // установить в состояние Signaled
+		//size_t count = m_hSyncEvents.size();
+		WaitForMultipleObjects(m_cnt, m_pEvents, TRUE, INFINITE);
+#endif
+	}
+	int close()
+	{
+		int ret = 0;
+#ifdef __linux__
+		pthread_barrier_destroy(&m_barrier);
+#else
+		for (auto& event : m_hSyncEvents)
+				CloseHandle(event);
+#endif
+		return ret;
+	}
+
+	//CBarrier();
+	//~CBarrier();
 
 };
 
