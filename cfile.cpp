@@ -126,7 +126,7 @@ int CFile::close()
 int CFile::read(void *buf, size_t size)
 {
 #ifdef __linux__
-	int res = ::read(m_hfile, buf, size);
+	ssize_t res = ::read(m_hfile, buf, size);
 	if (res < 0) {
 		printf("ERROR: can not read %s\n", m_fname.c_str());
 		return -1;
@@ -146,7 +146,7 @@ int CFile::read(void *buf, size_t size)
 int CFile::write(void *buf, size_t size)
 {
 #ifdef __linux__
-	int res = ::write(m_hfile, buf, size);
+	ssize_t res = ::write(m_hfile, buf, size);
 	if (res < 0) {
 		printf("ERROR: can not write %s\n", m_fname.c_str());
 		return -1;
