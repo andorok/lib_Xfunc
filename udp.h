@@ -11,7 +11,9 @@
 #ifdef __linux__
 #include <arpa/inet.h>
 #else
-#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+//#include <windows.h>
 #define ssize_t ptrdiff_t
 #endif
 
@@ -41,7 +43,11 @@ public:
     int get_sd();
     int close();
 
+#ifdef __linux__
     int sd;
+#else
+    SOCKET sd;
+#endif
     bool mcast;
     struct ip_mreq mreq;
 
