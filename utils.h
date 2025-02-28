@@ -13,7 +13,7 @@
 #endif
 
 //-----------------------------------------------------------------------------
-int getFullPath(const char *name, char *path)
+inline int xfn_getFullPath(const char *name, char *path)
 {
 #ifdef __linux__
 	char* ret = realpath(name, path);
@@ -27,7 +27,7 @@ int getFullPath(const char *name, char *path)
 }
 
 //-----------------------------------------------------------------------------
-int getCurrentDir(char *buf, int size)
+inline int xfn_getCurrentDir(char *buf, int size)
 {
 #ifdef __linux__
 	char* ret = getcwd(buf, size);
@@ -40,7 +40,7 @@ int getCurrentDir(char *buf, int size)
 }
 
 //-----------------------------------------------------------------------------
-int isDir(const char* dirname)
+inline int xfn_isDir(const char* dirname)
 {
 	int ret = 0;
 #ifdef __linux__
@@ -65,7 +65,7 @@ int isDir(const char* dirname)
 }
 
 //-----------------------------------------------------------------------------
-void createDir(const char* dirname)
+inline void xfn_createDir(const char* dirname)
 {
 #ifdef __linux__
 	struct stat st; // = { 0 };

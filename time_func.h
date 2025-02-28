@@ -7,28 +7,28 @@
 
 using time_val_t = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
-inline time_val_t get_time()
+inline time_val_t xfn_time()
 {
     return std::chrono::high_resolution_clock::now();
 }
 
-inline double get_difftime(time_val_t start, time_val_t end)
+inline double xfn_difftime(time_val_t start, time_val_t end)
 {
     return (double)std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
 
-inline double get_nano_difftime(time_val_t start, time_val_t end)
+inline double xfn_nano_difftime(time_val_t start, time_val_t end)
 {
 	return (double)std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 }
 
-inline void make_delay(int ms)
+inline void xfn_delay(int ms)
 {
 	//std::this_thread::sleep_for(std::chrono_literals::operator""ms(ms));
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
-inline void make_mcsec_delay(int mcsec)
+inline void xfn_mcsec_delay(int mcsec)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(mcsec));
 }
