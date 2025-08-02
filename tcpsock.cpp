@@ -113,7 +113,7 @@ int CTcpSock::connect(const std::string& ip, uint16_t port)
 
     int err = :: connect(m_sd, (struct sockaddr*)&addr, sizeof(struct sockaddr));
 
-    printf("connect: err %d\n", err);
+//    printf("connect: err %d\n", err);
 
     return err;
 }
