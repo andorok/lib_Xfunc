@@ -118,14 +118,42 @@ int CTcpSock::connect(const std::string& ip, uint16_t port)
     return err;
 }
 
-int CTcpSock::send( char *data, int size, int timeout )
+int CTcpSock::send( char *data, int size, int flags)
 {
-    return ::send( m_sd, data, size, 0 );
+    return ::send( m_sd, data, size, flags);
 }
 
-int CTcpSock::recv( char *data, int size, int timeout  )
+int CTcpSock::recv( char *data, int size, int flags)
 {
-    return ::recv( m_sd, data, size, 0 );
+    return ::recv( m_sd, data, size, flags);
+}
+
+int32_t CTcpSock::recv_all(char* data, int len, int flags)
+{
+    int total = 0;
+    int cnt = 0;
+    int size = len;
+    while (size > 0)
+    {
+        cnt = ::recv(m_sd, data, size, flags);
+        //printf("    CTcpSock::%s: data portion %d of %d\n", __func__, cnt, size);
+        if (cnt == -1)
+        {
+            printf("    CTcpSock::%s: %s (%d)\n", __func__, strerror(errno), errno);
+            return SOCKET_ERROR;
+        }
+        if (cnt == 0)
+        {
+            printf("\n  CTcpSock::%s: disconnected (received data size 0)\n", __func__);
+            return 0; // разрыв соединения
+        }
+        total += cnt;
+        printf("    CTcpSock::%s: data portion %d of %d (total %d of %d)\n", __func__, cnt, size, total, len);
+        data += cnt;
+        size -= cnt;
+    }
+
+    return total;
 }
 
 int CTcpSock::close()
